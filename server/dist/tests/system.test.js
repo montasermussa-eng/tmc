@@ -57,8 +57,36 @@ let gateToken;
         .post('/api/auth/login')
         .send({ username: 'gate1', password: 'gate123' });
     gateToken = gateRes.body.token;
+    // Create isolated test student and guest for test assertions
+    const testStudent = await db_1.prisma.student.upsert({
+        where: { militaryNumber: '102345' },
+        update: {},
+        create: {
+            militaryNumber: '102345',
+            fullName: 'أحمد محمود علي إبراهيم',
+        },
+    });
+    await db_1.prisma.guest.upsert({
+        where: { nationalId: '26508150102431' },
+        update: { hasAttended: false, busId: null, seatNumber: null },
+        create: {
+            fullName: 'محمود علي إبراهيم عبد الله',
+            nationalId: '26508150102431',
+            nationalIdSuffix: '0102431',
+            studentId: testStudent.id,
+            relationship: 'والد',
+            hasAttended: false,
+        },
+    });
 });
 (0, vitest_1.afterAll)(async () => {
+    // Clean up any test guests and students created during tests
+    await db_1.prisma.guest.deleteMany({
+        where: { nationalId: '26508150102431' },
+    });
+    await db_1.prisma.student.deleteMany({
+        where: { militaryNumber: '102345' },
+    });
     await db_1.prisma.$disconnect();
 });
 (0, vitest_1.describe)('1. National ID Validator & Normalization Tests', () => {
