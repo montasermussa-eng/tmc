@@ -72,10 +72,6 @@ export const ManifestPrintView: React.FC<ManifestPrintViewProps> = ({ bus }) => 
           </span>
           <span>•</span>
           <span>
-            <strong>المقاعد المتبقية:</strong> {bus.remainingSeats}
-          </span>
-          <span>•</span>
-          <span>
             <strong>قائد الأتوبيس:</strong>{' '}
             {bus.leader ? `${bus.leader.rank} / ${bus.leader.fullName}` : 'لم يسجل بعد'}
           </span>
