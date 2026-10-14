@@ -196,7 +196,7 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
         </div>
 
         {/* Operational Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
             <span className="text-xs text-slate-500 block">عدد المدعوين المسجلين</span>
             <div className="text-2xl font-black text-slate-900 mt-1">
@@ -204,12 +204,6 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
-            <span className="text-xs text-slate-500 block">المقاعد المتبقية</span>
-            <div className="text-2xl font-black text-tmc-navy mt-1">
-              {data.remainingSeats}
-            </div>
-          </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
             <span className="text-xs text-slate-500 block">نسبة الإشغال</span>

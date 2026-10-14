@@ -27,9 +27,39 @@ beforeAll(async () => {
     .post('/api/auth/login')
     .send({ username: 'gate1', password: 'gate123' });
   gateToken = gateRes.body.token;
+
+  // Create isolated test student and guest for test assertions
+  const testStudent = await prisma.student.upsert({
+    where: { militaryNumber: '102345' },
+    update: {},
+    create: {
+      militaryNumber: '102345',
+      fullName: 'أحمد محمود علي إبراهيم',
+    },
+  });
+
+  await prisma.guest.upsert({
+    where: { nationalId: '26508150102431' },
+    update: { hasAttended: false, busId: null, seatNumber: null },
+    create: {
+      fullName: 'محمود علي إبراهيم عبد الله',
+      nationalId: '26508150102431',
+      nationalIdSuffix: '0102431',
+      studentId: testStudent.id,
+      relationship: 'والد',
+      hasAttended: false,
+    },
+  });
 });
 
 afterAll(async () => {
+  // Clean up any test guests and students created during tests
+  await prisma.guest.deleteMany({
+    where: { nationalId: '26508150102431' },
+  });
+  await prisma.student.deleteMany({
+    where: { militaryNumber: '102345' },
+  });
   await prisma.$disconnect();
 });
 

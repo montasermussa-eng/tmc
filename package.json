@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "description": "Military Technological College - Graduation Guest Registration & Bus Management System",
   "scripts": {
-    "install:all": "cd server && npm install && cd ../client && npm install",
+    "postinstall": "npm --prefix server install && npm --prefix server run prisma:generate && npm --prefix client install",
+    "install:all": "npm --prefix server install && npm --prefix client install",
     "db:setup": "cd server && npm run prisma:generate && npm run prisma:push && npm run prisma:seed",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build:client": "cd client && npm run build",
-    "build:server": "cd server && npm run build",
+    "build:client": "npm --prefix client run build",
+    "build:server": "npm --prefix server run build",
     "build": "npm run build:client && npm run build:server",
-    "start": "cd server && npm start",
+    "start": "cd server && npx prisma db push && npx tsx prisma/seed.ts && node dist/index.js",
     "test": "cd server && npm test"
   },
   "keywords": [
