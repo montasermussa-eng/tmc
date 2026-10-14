@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiRequest } from '../api/client';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface User {
   id: string;
@@ -10,11 +9,9 @@ export interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: User;
   token: string | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
   isAdmin: boolean;
   isSupervisor: boolean;
   isGateOperator: boolean;
@@ -22,68 +19,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Official user: المقدم / أسامة الجمل
+const OFFICIAL_USER: User = {
+  id: 'osama-elgamal',
+  username: 'osama_elgamal',
+  fullName: 'المقدم / أسامة الجمل',
+  role: 'ADMIN',
+  militaryNumber: 'M-10001',
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('tmc_auth_token'));
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    async function verifySession() {
-      const storedToken = localStorage.getItem('tmc_auth_token');
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const res = await apiRequest<{ user: User }>('/auth/me');
-        setUser(res.user);
-      } catch (err) {
-        console.warn('Session expired or invalid:', err);
-        localStorage.removeItem('tmc_auth_token');
-        setUser(null);
-        setToken(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    verifySession();
-  }, []);
-
-  const login = async (username: string, password: string) => {
-    const res = await apiRequest<{ token: string; user: User }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password }),
-    });
-
-    localStorage.setItem('tmc_auth_token', res.token);
-    setToken(res.token);
-    setUser(res.user);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('tmc_auth_token');
-    setUser(null);
-    setToken(null);
-  };
-
-  const role = user?.role;
-  const isAdmin = role === 'ADMIN';
-  const isSupervisor = role === 'SUPERVISOR' || isAdmin;
-  const isGateOperator = role === 'GATE_OPERATOR' || isAdmin;
+  const [user] = useState<User>(OFFICIAL_USER);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
-        isLoading,
-        login,
-        logout,
-        isAdmin,
-        isSupervisor,
-        isGateOperator,
+        token: 'tmc-session',
+        isLoading: false,
+        isAdmin: true,
+        isSupervisor: true,
+        isGateOperator: true,
       }}
     >
       {children}

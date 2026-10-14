@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, LogOut, Clock, UserCheck } from 'lucide-react';
+import { Clock, UserCheck } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -27,21 +27,6 @@ export const Header: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getRoleBadge = (role?: string) => {
-    switch (role) {
-      case 'ADMIN':
-        return { label: 'مسؤول النظام (ضابط النظم)', color: 'bg-red-800 text-red-100' };
-      case 'SUPERVISOR':
-        return { label: 'مشرف قطاع النقل وتسكين الأتوبيسات', color: 'bg-amber-800 text-amber-100' };
-      case 'GATE_OPERATOR':
-        return { label: 'مسؤول بوابة الدخول الرئيسية', color: 'bg-emerald-800 text-emerald-100' };
-      default:
-        return { label: 'مستخدم مصرح', color: 'bg-slate-700 text-slate-200' };
-    }
-  };
-
-  const roleInfo = getRoleBadge(user?.role);
-
   return (
     <header className="bg-tmc-navy text-white shadow-md border-b-2 border-tmc-gold sticky top-0 z-40 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,8 +42,8 @@ export const Header: React.FC = () => {
               />
             </div>
             <div>
-              <div className="text-xs text-tmc-gold tracking-wider font-semibold">
-                جمهورية مصر العربية — وزارة الدفاع
+              <div className="text-xs text-tmc-gold tracking-wider font-bold">
+                وزارة الدفاع - الاكاديمية العسكرية المصرية
               </div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
                 الكلية العسكرية التكنولوجية
@@ -72,43 +57,28 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Time, User Role, and Logout */}
-          <div className="flex items-center gap-3 md:gap-5">
+          {/* Time & User Badge (المقدم / أسامة الجمل) */}
+          <div className="flex items-center gap-4">
             {/* Live Clock */}
             <div className="hidden lg:flex items-center gap-2 text-xs text-slate-300 bg-tmc-navy-800 px-3 py-1.5 rounded border border-tmc-navy-700">
               <Clock className="w-3.5 h-3.5 text-tmc-gold" />
               <span>{currentTime}</span>
             </div>
 
-            {/* User Profile Badge */}
-            {user && (
-              <div className="flex items-center gap-2.5">
-                <div className="text-left rtl:text-right hidden sm:block">
-                  <div className="text-sm font-semibold text-white leading-none">
-                    {user.fullName}
-                  </div>
-                  <div className="mt-1">
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full inline-block ${roleInfo.color}`}>
-                      {roleInfo.label}
-                    </span>
-                  </div>
+            {/* Officer Badge: المقدم / أسامة الجمل */}
+            <div className="flex items-center gap-2.5 bg-tmc-navy-800/90 px-3.5 py-1.5 rounded-lg border border-tmc-navy-600">
+              <div className="h-8 w-8 rounded-full bg-tmc-navy-700 border border-tmc-gold flex items-center justify-center text-tmc-gold font-bold">
+                <UserCheck className="w-4 h-4" />
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-black text-white leading-tight">
+                  {user.fullName}
                 </div>
-
-                <div className="h-9 w-9 rounded-full bg-tmc-navy-700 border border-tmc-navy-500 flex items-center justify-center text-tmc-gold font-bold text-sm">
-                  <UserCheck className="w-4 h-4" />
+                <div className="text-[10px] text-tmc-gold font-semibold">
+                  مسؤول المنظومة
                 </div>
               </div>
-            )}
-
-            {/* Logout button */}
-            <button
-              onClick={logout}
-              title="تسجيل الخروج من المنظومة"
-              className="flex items-center gap-1.5 bg-tmc-navy-800 hover:bg-red-950 text-slate-300 hover:text-red-200 px-3 py-1.5 rounded border border-tmc-navy-700 hover:border-red-800 text-xs font-medium transition"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">خروج</span>
-            </button>
+            </div>
           </div>
 
         </div>
