@@ -337,6 +337,30 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
+                {/* Bus Leader as First Row */}
+                {data.leader && (
+                  <tr className="bg-emerald-50/80 border-b-2 border-emerald-500 font-bold">
+                    <td className="py-3 px-4 text-center text-emerald-800 font-bold text-xs">
+                      ★
+                    </td>
+                    <td className="py-3 px-4 text-center font-extrabold text-emerald-900">
+                      المقدمة
+                    </td>
+                    <td className="py-3 px-4 font-black text-emerald-950">
+                      قائد الأتوبيس: {data.leader.rank} / {data.leader.fullName}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-xs text-emerald-800">
+                      {data.leader.phone ? `هاتف: ${data.leader.phone}` : '—'}
+                    </td>
+                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-800">
+                      المسؤول الأمني والإداري المعتمد عن الأتوبيس
+                    </td>
+                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-900 font-semibold">
+                      معتمد رسمياً (الفرد الأول)
+                    </td>
+                  </tr>
+                )}
+
                 {filteredManifest.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-12 text-center text-slate-500">
@@ -393,30 +417,6 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                       </td>
                     </tr>
                   ))
-                )}
-
-                {/* Bus Leader Separated Entry at end of manifest */}
-                {data.leader && (
-                  <tr className="bg-emerald-50/60 border-t-2 border-emerald-600 font-bold">
-                    <td className="py-3 px-4 text-center text-emerald-800 font-bold text-xs">
-                      ★
-                    </td>
-                    <td className="py-3 px-4 text-center font-extrabold text-emerald-900">
-                      قائد الأتوبيس
-                    </td>
-                    <td className="py-3 px-4 font-black text-emerald-950">
-                      {data.leader.rank} / {data.leader.fullName}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-xs text-emerald-800">
-                      {data.leader.phone ? `هاتف: ${data.leader.phone}` : '—'}
-                    </td>
-                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-800">
-                      المسؤول الأمني والإداري المعتمد
-                    </td>
-                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-900 font-semibold">
-                      معتمد رسمياً (الراكب رقم 37)
-                    </td>
-                  </tr>
                 )}
               </tbody>
             </table>

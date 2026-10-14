@@ -36,7 +36,7 @@ export const ManifestPrintView: React.FC<ManifestPrintViewProps> = ({ bus }) => 
   return (
     <div className="bg-white text-black p-4 font-cairo print:p-0 max-w-[210mm] mx-auto" dir="rtl">
       
-      {/* 1. Centered Clean Header requested by User */}
+      {/* 1. Centered Clean Header */}
       <div className="text-center border-b-2 border-slate-800 pb-3 mb-3">
         {/* Logo centered */}
         <div className="flex justify-center mb-1">
@@ -86,13 +86,13 @@ export const ManifestPrintView: React.FC<ManifestPrintViewProps> = ({ bus }) => 
         </div>
       </div>
 
-      {/* 2. Compact, Single-Row Table with NO Name Wrapping */}
+      {/* 2. Compact, Single-Row Table with Bus Leader as the FIRST entry */}
       <div className="w-full overflow-hidden">
         <table className="w-full text-right border-collapse border border-slate-500 text-[10px] leading-tight">
           <thead>
             <tr className="bg-slate-200 border-b border-slate-500 font-bold text-slate-900 whitespace-nowrap">
               <th className="border border-slate-500 py-1 px-1 w-6 text-center">م</th>
-              <th className="border border-slate-500 py-1 px-1 w-10 text-center">المقعد</th>
+              <th className="border border-slate-500 py-1 px-1 w-12 text-center">المقعد</th>
               <th className="border border-slate-500 py-1 px-2 text-right">اسم المدعو رباعي</th>
               <th className="border border-slate-500 py-1 px-1.5 text-center font-mono">الرقم القومي</th>
               <th className="border border-slate-500 py-1 px-2 text-right">اسم الطالب المرتبط به</th>
@@ -102,6 +102,31 @@ export const ManifestPrintView: React.FC<ManifestPrintViewProps> = ({ bus }) => 
             </tr>
           </thead>
           <tbody>
+            {/* Bus Leader as the VERY FIRST ENTRY */}
+            <tr className="bg-slate-100 border-b-2 border-slate-600 font-bold whitespace-nowrap">
+              <td className="border border-slate-500 py-1 px-1 text-center font-black text-tmc-navy text-xs">
+                ★
+              </td>
+              <td className="border border-slate-500 py-1 px-1 text-center text-[9.5px] font-black text-tmc-navy">
+                المقدمة
+              </td>
+              <td className="border border-slate-500 py-1 px-2 font-black text-slate-950 text-[11px]">
+                {bus.leader
+                  ? `قائد الأتوبيس: ${bus.leader.rank} / ${bus.leader.fullName}`
+                  : 'قائد الأتوبيس: (لم يسجل بعد)'}
+              </td>
+              <td className="border border-slate-500 py-1 px-1.5 text-center font-mono text-[9.5px]">
+                {bus.leader?.phone ? `هاتف: ${bus.leader.phone}` : '—'}
+              </td>
+              <td colSpan={2} className="border border-slate-500 py-1 px-2 text-center text-[9.5px] text-slate-700">
+                المسؤول الأمني والإداري المعتمد عن الأتوبيس
+              </td>
+              <td colSpan={2} className="border border-slate-500 py-1 px-1.5 text-center text-[9.5px] font-semibold text-slate-900">
+                معتمد رسمياً (الفرد الأول)
+              </td>
+            </tr>
+
+            {/* Guest Passengers Rows */}
             {bus.manifest.length > 0 ? (
               bus.manifest.map((guest, idx) => (
                 <tr
@@ -151,52 +176,8 @@ export const ManifestPrintView: React.FC<ManifestPrintViewProps> = ({ bus }) => 
                 </td>
               </tr>
             )}
-
-            {/* Separated Bus Leader Row (37th person) */}
-            <tr className="bg-slate-100 border-t-2 border-slate-700 font-bold whitespace-nowrap">
-              <td className="border border-slate-500 py-1 px-1 text-center font-black">★</td>
-              <td className="border border-slate-500 py-1 px-1 text-center text-[9.5px]">المقدمة</td>
-              <td className="border border-slate-500 py-1 px-2 font-black text-slate-950 text-[10.5px]">
-                {bus.leader
-                  ? `قائد الأتوبيس: ${bus.leader.rank} / ${bus.leader.fullName}`
-                  : 'قائد الأتوبيس: (لم يسجل بعد)'}
-              </td>
-              <td className="border border-slate-500 py-1 px-1.5 text-center font-mono text-[9.5px]">
-                {bus.leader?.phone ? `هاتف: ${bus.leader.phone}` : '—'}
-              </td>
-              <td colSpan={2} className="border border-slate-500 py-1 px-2 text-center text-[9.5px] text-slate-700">
-                المسؤول الأمني والإداري المعتمد عن الأتوبيس
-              </td>
-              <td colSpan={2} className="border border-slate-500 py-1 px-1.5 text-center text-[9.5px] font-semibold text-slate-900">
-                معتمد رسمياً (الفرد 37)
-              </td>
-            </tr>
           </tbody>
         </table>
-      </div>
-
-      {/* 3. Compact Signatures Section */}
-      <div className="page-break-inside-avoid mt-5 pt-3 border-t border-slate-400">
-        <div className="grid grid-cols-3 gap-4 text-center text-[10px] font-bold text-slate-900">
-          <div>
-            <p className="mb-6">توقيع قائد الأتوبيس</p>
-            <p className="border-t border-dotted border-slate-400 pt-0.5 text-slate-700 text-[9px]">
-              {bus.leader ? `${bus.leader.rank} / ${bus.leader.fullName}` : 'الاسم والتوقيع'}
-            </p>
-          </div>
-          <div>
-            <p className="mb-6">توقيع ضابط أمن الحفل</p>
-            <p className="border-t border-dotted border-slate-400 pt-0.5 text-slate-700 text-[9px]">
-              الاسم والتوقيع
-            </p>
-          </div>
-          <div>
-            <p className="mb-6">يعتمد، مدير الكلية العسكرية التكنولوجية</p>
-            <p className="border-t border-dotted border-slate-400 pt-0.5 text-slate-700 text-[9px]">
-              الخاتم والتوقيع الرسمي
-            </p>
-          </div>
-        </div>
       </div>
 
     </div>
