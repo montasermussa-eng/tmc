@@ -1,0 +1,25 @@
+{
+  "name": "tmc-graduation-bus-system",
+  "version": "1.0.0",
+  "description": "Military Technological College - Graduation Guest Registration & Bus Management System",
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "db:setup": "cd server && npm run prisma:generate && npm run prisma:push && npm run prisma:seed",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "build": "npm run build:client && npm run build:server",
+    "start": "cd server && npm start",
+    "test": "cd server && npm test"
+  },
+  "keywords": [
+    "military-technological-college",
+    "graduation",
+    "guest-registration",
+    "bus-allocation",
+    "egyptian-military"
+  ],
+  "author": "Military Technological College Engineering Team",
+  "license": "UNLICENSED"
+}

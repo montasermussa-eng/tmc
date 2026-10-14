@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String     @id @default(cuid())
+  username       String     @unique
+  passwordHash   String
+  fullName       String
+  role           String     // "ADMIN", "GATE_OPERATOR", "SUPERVISOR"
+  militaryNumber String?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Student {
+  id             Int      @id @default(autoincrement())
+  militaryNumber String   @unique
+  fullName       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  guests         Guest[]
+
+  @@index([militaryNumber])
+  @@index([fullName])
+}
+
+model Bus {
+  id           Int        @id // 1 to 27
+  busNumber    Int        @unique // 1 to 27
+  capacity     Int        @default(36)
+  status       String     @default("AVAILABLE") // "AVAILABLE", "IN_PROGRESS", "FULL", "CLOSED"
+  closedReason String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  leader       BusLeader?
+  guests       Guest[]
+
+  @@index([status])
+}
+
+model BusLeader {
+  id         String   @id @default(cuid())
+  busId      Int      @unique
+  bus        Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+  rank       String
+  fullName   String
+  phone      String?
+  assignedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Guest {
+  id               String       @id @default(cuid())
+  fullName         String
+  nationalId       String       @unique
+  nationalIdSuffix String       // Last 7 digits for instant gate lookup
+  studentId        Int?
+  student          Student?     @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  relationship     String?
+  isIndependent    Boolean      @default(false)
+  hasAttended      Boolean      @default(false)
+  checkedInAt      DateTime?
+  checkedInBy      String?
+  busId            Int?
+  bus              Bus?         @relation(fields: [busId], references: [id], onDelete: SetNull)
+  seatNumber       Int?         // 1 to 36
+  importBatchId    String?
+  importBatch      ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([nationalIdSuffix])
+  @@index([busId])
+  @@index([studentId])
+  @@index([hasAttended])
+  @@index([fullName])
+}
+
+model MilitaryRank {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+}
+
+model RelationshipType {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String   // "CHECK_IN", "BUS_LEADER_ASSIGNED", "GUEST_CREATED", "IMPORT", etc.
+  entityType String   // "GUEST", "BUS", "STUDENT", "IMPORT", "AUTH"
+  entityId   String?
+  details    String   // Detailed Arabic or JSON description
+  userId     String?
+  userName   String?
+  userRole   String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+model ImportBatch {
+  id              String   @id @default(cuid())
+  filename        String
+  totalRows       Int
+  acceptedRows    Int
+  rejectedRows    Int
+  duplicatesCount Int
+  errorsJson      String   // JSON string of row validation errors
+  importedBy      String?
+  createdAt       DateTime @default(now())
+  guests          Guest[]
+}
+
+model SystemSetting {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       String
+  description String?
+}
