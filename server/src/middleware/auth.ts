@@ -15,11 +15,11 @@ export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
 
-// Single official system user: المقدم / أسامة الجمل
+// Single official system user: مقدم / أسامة الجمل
 export const OFFICIAL_USER: AuthenticatedUser = {
   id: 'osama-elgamal',
   username: 'osama_elgamal',
-  fullName: 'المقدم / أسامة الجمل',
+  fullName: 'مقدم / أسامة الجمل',
   role: 'ADMIN',
   militaryNumber: 'M-10001',
 };

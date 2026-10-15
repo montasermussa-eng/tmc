@@ -1,7 +1,6 @@
 import React from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { Footer } from './Footer';
 
 interface LayoutProps {
   currentTab: string;
@@ -21,14 +20,12 @@ export const Layout: React.FC<LayoutProps> = ({
       <div className="flex-1 flex overflow-hidden">
         <Sidebar currentTab={currentTab} onSelectTab={onSelectTab} />
         
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-16">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
-
-      <Footer />
     </div>
   );
 };

@@ -96,3 +96,130 @@ exports.checkinRouter.post('/execute', auth_1.authenticate, async (req, res) => 
         });
     }
 });
+// Search Students by Military Number or Name with Associated Guests
+exports.checkinRouter.get('/student-search', auth_1.authenticate, async (req, res) => {
+    try {
+        const rawQuery = (req.query.query || '').trim();
+        if (!rawQuery) {
+            return res.status(400).json({ error: 'يرجى إدخال الرقم العسكري للطالب أو اسمه' });
+        }
+        const normalizedQuery = (0, nationalIdValidator_1.normalizeNumerals)(rawQuery);
+        const students = await db_1.prisma.student.findMany({
+            where: {
+                OR: [
+                    { militaryNumber: { contains: normalizedQuery } },
+                    { militaryNumber: { contains: rawQuery } },
+                    { fullName: { contains: rawQuery } },
+                ],
+            },
+            include: {
+                guests: {
+                    include: {
+                        bus: true,
+                    },
+                    orderBy: [
+                        { hasAttended: 'desc' },
+                        { relationship: 'asc' },
+                        { fullName: 'asc' },
+                    ],
+                },
+            },
+            take: 10,
+        });
+        if (students.length === 0) {
+            return res.json({
+                found: false,
+                students: [],
+                message: `لم يتم العثور على طالب يطابق الرقم العسكري أو الاسم [${rawQuery}]`,
+            });
+        }
+        const isAuthorizedForFullId = req.user?.role === 'ADMIN' || req.user?.role === 'SUPERVISOR';
+        const formattedStudents = students.map((s) => ({
+            id: s.id,
+            militaryNumber: s.militaryNumber,
+            fullName: s.fullName,
+            totalGuests: s.guests.length,
+            attendedGuests: s.guests.filter((g) => g.hasAttended).length,
+            absentGuests: s.guests.filter((g) => !g.hasAttended).length,
+            guests: s.guests.map((g) => ({
+                id: g.id,
+                fullName: g.fullName,
+                nationalId: isAuthorizedForFullId ? g.nationalId : (0, nationalIdValidator_1.maskNationalId)(g.nationalId),
+                nationalIdMasked: (0, nationalIdValidator_1.maskNationalId)(g.nationalId),
+                relationship: g.relationship || 'غير محدد',
+                hasAttended: g.hasAttended,
+                checkedInAt: g.checkedInAt,
+                busNumber: g.bus?.busNumber || null,
+                seatNumber: g.seatNumber || null,
+            })),
+        }));
+        return res.json({
+            found: true,
+            studentsCount: formattedStudents.length,
+            students: formattedStudents,
+        });
+    }
+    catch (error) {
+        console.error('Student checkin search error:', error);
+        return res.status(500).json({ error: 'حدث خطأ أثناء البحث عن الطالب ومدعويه' });
+    }
+});
+// Batch Check-in and Concurrency-Safe Bus Allocation for multiple selected guests
+exports.checkinRouter.post('/batch-execute', auth_1.authenticate, async (req, res) => {
+    try {
+        const { guestIds } = req.body;
+        if (!Array.isArray(guestIds) || guestIds.length === 0) {
+            return res.status(400).json({ error: 'يرجى تحديد مدعو واحد على الأقل لتسجيل الدخول' });
+        }
+        const results = [];
+        let busFullAlert = false;
+        let fullBusNumber = 0;
+        for (const guestId of guestIds) {
+            try {
+                const alloc = await (0, allocationService_1.checkinAndAllocateGuest)(guestId, req.user?.id, req.user?.fullName, req.ip);
+                results.push({
+                    guestId,
+                    guestName: alloc.guest?.fullName || '',
+                    success: true,
+                    alreadyCheckedIn: !!alloc.alreadyCheckedIn,
+                    busNumber: alloc.busNumber,
+                    seatNumber: alloc.seatNumber,
+                    isBusNowFull: alloc.isBusNowFull,
+                    message: alloc.message,
+                });
+                if (alloc.isBusNowFull) {
+                    busFullAlert = true;
+                    fullBusNumber = alloc.busNumber;
+                }
+            }
+            catch (err) {
+                results.push({
+                    guestId,
+                    guestName: '',
+                    success: false,
+                    alreadyCheckedIn: false,
+                    busNumber: 0,
+                    seatNumber: 0,
+                    isBusNowFull: false,
+                    message: err.message || 'فشل تسكين هذا المدعو',
+                });
+            }
+        }
+        const successfulCount = results.filter((r) => r.success).length;
+        return res.json({
+            success: successfulCount > 0,
+            totalRequested: guestIds.length,
+            successfulCount,
+            results,
+            busFullAlert,
+            fullBusNumber,
+            message: `تم بنجاح تسجيل حضور وتسكين (${successfulCount}) من أصل (${guestIds.length}) مدعوين في الأتوبيسات.`,
+        });
+    }
+    catch (error) {
+        console.error('Batch checkin execute error:', error);
+        return res.status(500).json({
+            error: error.message || 'فشل تسجيل الدخول الجماعي للمدعوين',
+        });
+    }
+});

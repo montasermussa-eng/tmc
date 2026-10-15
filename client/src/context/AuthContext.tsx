@@ -19,11 +19,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Official user: المقدم / أسامة الجمل
+// Official user: مقدم / أسامة الجمل
 const OFFICIAL_USER: User = {
   id: 'osama-elgamal',
   username: 'osama_elgamal',
-  fullName: 'المقدم / أسامة الجمل',
+  fullName: 'مقدم / أسامة الجمل',
   role: 'ADMIN',
   militaryNumber: 'M-10001',
 };

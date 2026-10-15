@@ -3,7 +3,7 @@ import { OFFICIAL_USER, AuthenticatedRequest } from '../middleware/auth';
 
 export const authRouter = Router();
 
-// Current User Profile - Always returns المقدم / أسامة الجمل
+// Current User Profile - Always returns مقدم / أسامة الجمل
 authRouter.get('/me', (req: AuthenticatedRequest, res: Response) => {
   return res.json({ user: OFFICIAL_USER });
 });

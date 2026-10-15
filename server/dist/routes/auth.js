@@ -4,7 +4,7 @@ exports.authRouter = void 0;
 const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
 exports.authRouter = (0, express_1.Router)();
-// Current User Profile - Always returns المقدم / أسامة الجمل
+// Current User Profile - Always returns مقدم / أسامة الجمل
 exports.authRouter.get('/me', (req, res) => {
     return res.json({ user: auth_1.OFFICIAL_USER });
 });

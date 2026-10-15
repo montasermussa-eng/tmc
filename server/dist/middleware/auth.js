@@ -9,11 +9,11 @@ exports.authenticate = authenticate;
 exports.requireRole = requireRole;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || 'tmc-military-tech-college-secret-key-2026';
-// Single official system user: المقدم / أسامة الجمل
+// Single official system user: مقدم / أسامة الجمل
 exports.OFFICIAL_USER = {
     id: 'osama-elgamal',
     username: 'osama_elgamal',
-    fullName: 'المقدم / أسامة الجمل',
+    fullName: 'مقدم / أسامة الجمل',
     role: 'ADMIN',
     militaryNumber: 'M-10001',
 };

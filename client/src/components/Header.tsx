@@ -57,7 +57,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Time & User Badge (المقدم / أسامة الجمل) */}
+          {/* Time & User Badge (مقدم / أسامة الجمل) */}
           <div className="flex items-center gap-4">
             {/* Live Clock */}
             <div className="hidden lg:flex items-center gap-2 text-xs text-slate-300 bg-tmc-navy-800 px-3 py-1.5 rounded border border-tmc-navy-700">
@@ -65,7 +65,7 @@ export const Header: React.FC = () => {
               <span>{currentTime}</span>
             </div>
 
-            {/* Officer Badge: المقدم / أسامة الجمل */}
+            {/* Officer Badge: مقدم / أسامة الجمل */}
             <div className="flex items-center gap-2.5 bg-tmc-navy-800/90 px-3.5 py-1.5 rounded-lg border border-tmc-navy-600">
               <div className="h-8 w-8 rounded-full bg-tmc-navy-700 border border-tmc-gold flex items-center justify-center text-tmc-gold font-bold">
                 <UserCheck className="w-4 h-4" />
