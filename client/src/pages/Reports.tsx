@@ -9,7 +9,6 @@ import {
   UserX,
   FileSpreadsheet,
   CheckCircle2,
-  ShieldCheck,
   GraduationCap,
 } from 'lucide-react';
 import { apiRequest } from '../api/client';
@@ -147,20 +146,6 @@ export const Reports: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* Institutional Guidelines Alert */}
-      <div className="bg-slate-50 border border-slate-300 rounded-xl p-5 text-xs text-slate-700 space-y-2">
-        <h4 className="font-bold text-tmc-navy flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-tmc-gold" />
-          <span>ضوابط أمن وتداول الكشوفات الرسمية</span>
-        </h4>
-        <p className="leading-relaxed">
-          - جميع الكشوف المصدرة تحافظ على سرية البيانات الشخصية، ويتم تقييد عرض الأرقام القومية الكاملة حسب صلاحية المستخدم المسجل.
-        </p>
-        <p className="leading-relaxed">
-          - لطباعة كشف حافلة محددة بالترويسة العسكرية والشعار الرسمي، يرجى التوجه إلى شاشة "إدارة وتسكين الأتوبيسات" واختيار الأتوبيس والضغط على "طباعة الكشف الرسمي (PDF)".
-        </p>
       </div>
     </div>
   );

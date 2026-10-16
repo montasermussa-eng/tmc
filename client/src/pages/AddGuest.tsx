@@ -384,11 +384,6 @@ export const AddGuest: React.FC<AddGuestProps> = ({ onSuccessNavigate }) => {
             />
           </div>
 
-          {/* Notice */}
-          <div className="p-3 bg-slate-100 border border-slate-200 rounded-lg text-[11px] text-slate-600 leading-relaxed">
-            <span className="font-bold text-tmc-navy">قاعدة بيانات المنظومة:</span> إضافة المدعو هنا تسجله في قاعدة البيانات كمدعو "لم يحضر بعد". سيتم تسكينه تلقائياً في الأتوبيس الشاغر التالي لحظة تسجيل دخوله الفعلي عبر شاشة البوابة.
-          </div>
-
           {/* Submit Button */}
           <div className="pt-2">
             <button

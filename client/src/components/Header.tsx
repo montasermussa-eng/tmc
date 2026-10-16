@@ -43,16 +43,13 @@ export const Header: React.FC = () => {
             </div>
             <div>
               <div className="text-xs text-tmc-gold tracking-wider font-bold">
-                وزارة الدفاع - الاكاديمية العسكرية المصرية
+                الاكاديمية العسكرية المصرية
               </div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
                 الكلية العسكرية التكنولوجية
-                <span className="text-xs bg-tmc-navy-700 border border-tmc-navy-500 px-2 py-0.5 rounded text-slate-200 font-normal hidden sm:inline-block">
-                  TMC
-                </span>
               </h1>
               <p className="text-xs text-slate-300 hidden md:block">
-                منظومة تسجيل حضور ضيوف حفل التخرج وإدارة وتسكين الأتوبيسات
+                منظومة تسجيل حضور المدعويين لحفل تخرج الدفعة رقم ١
               </p>
             </div>
           </div>

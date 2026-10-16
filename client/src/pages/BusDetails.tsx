@@ -276,9 +276,6 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                     ? 'مكتمل العدد — قائد الأتوبيس غير مسجل حتى الآن'
                     : 'لم يتم تسجيل قائد لهذا الأتوبيس بعد'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  القائد هو المسؤول الأمني ولا يستهلك مقعداً من مقاعد الضيوف الـ 36
-                </p>
               </div>
             </div>
 

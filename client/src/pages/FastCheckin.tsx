@@ -548,9 +548,6 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
                 </div>
               )}
 
-              <div className="text-center text-[11px] text-slate-400">
-                يدعم الأرقام باللغة العربية (٠-٩) والإنجليزية (0-9). اضغط <kbd className="bg-slate-200 px-1 py-0.5 rounded text-slate-700 font-mono">Enter</kbd> للبحث المباشر.
-              </div>
             </form>
           </div>
 
@@ -820,9 +817,6 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
                 </div>
               )}
 
-              <div className="text-center text-[11px] text-slate-400">
-                يدعم الأرقام باللغة العربية (٠-٩) أو الإنجليزية (0-9) أو كتابة اسم الطالب. اضغط <kbd className="bg-slate-200 px-1 py-0.5 rounded text-slate-700 font-mono">Enter</kbd> للبحث.
-              </div>
             </form>
           </div>
 

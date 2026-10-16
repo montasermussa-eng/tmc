@@ -116,12 +116,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onSelectTab }) => 
           })}
         </nav>
       </div>
-
-      {/* Footer notice */}
-      <div className="p-4 border-t border-slate-800/80 text-[11px] text-slate-400 text-center">
-        <div className="text-tmc-gold font-bold">وزارة الدفاع - الاكاديمية العسكرية المصرية</div>
-        <div className="text-slate-400 mt-0.5">الكلية العسكرية التكنولوجية © 2026</div>
-      </div>
     </aside>
   );
 };

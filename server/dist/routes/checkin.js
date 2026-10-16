@@ -7,6 +7,27 @@ const auth_1 = require("../middleware/auth");
 const nationalIdValidator_1 = require("../services/nationalIdValidator");
 const allocationService_1 = require("../services/allocationService");
 exports.checkinRouter = (0, express_1.Router)();
+// Live Attendance Stats Counter for Gate Check-in
+exports.checkinRouter.get('/stats', auth_1.authenticate, async (req, res) => {
+    try {
+        const [totalGuests, attendedGuests] = await Promise.all([
+            db_1.prisma.guest.count(),
+            db_1.prisma.guest.count({ where: { hasAttended: true } }),
+        ]);
+        const absentGuests = totalGuests - attendedGuests;
+        const percentage = totalGuests > 0 ? Math.round((attendedGuests / totalGuests) * 100) : 0;
+        return res.json({
+            totalGuests,
+            attendedGuests,
+            absentGuests,
+            percentage,
+        });
+    }
+    catch (error) {
+        console.error('Checkin stats error:', error);
+        return res.status(500).json({ error: 'حدث خطأ أثناء جلب إحصائيات الحضور' });
+    }
+});
 // Fast Gate Search by Last 7 Digits of National ID
 exports.checkinRouter.get('/search', auth_1.authenticate, async (req, res) => {
     try {

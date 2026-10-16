@@ -67,4 +67,12 @@
   tr {
     page-break-inside: avoid;
   }
+
+  /* Enforce uniform font and all-black text for official print manifests */
+  .manifest-print-view,
+  .manifest-print-view * {
+    color: #000000 !important;
+    font-family: 'Cairo', sans-serif !important;
+  }
 }
+

@@ -188,10 +188,6 @@ export const BusLeaderModal: React.FC<BusLeaderModalProps> = ({
             </div>
           </div>
 
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600 leading-relaxed">
-            <span className="font-semibold text-tmc-navy">ملاحظة تنظيمية:</span> سعة الأتوبيس الرسمية هي 36 مقعداً مخصصة لضيوف حفل التخرج. قائد الأتوبيس هو المسؤول الأمني والإداري ولا يحتسب ضمن مقاعد الضيوف الـ 36 (إجمالي الكشف الرسمي 37 فرداً).
-          </div>
-
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
             <button
