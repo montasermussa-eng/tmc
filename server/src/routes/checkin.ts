@@ -6,6 +6,28 @@ import { checkinAndAllocateGuest } from '../services/allocationService';
 
 export const checkinRouter = Router();
 
+// Live Attendance Stats Counter for Gate Check-in
+checkinRouter.get('/stats', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const [totalGuests, attendedGuests] = await Promise.all([
+      prisma.guest.count(),
+      prisma.guest.count({ where: { hasAttended: true } }),
+    ]);
+    const absentGuests = totalGuests - attendedGuests;
+    const percentage = totalGuests > 0 ? Math.round((attendedGuests / totalGuests) * 100) : 0;
+
+    return res.json({
+      totalGuests,
+      attendedGuests,
+      absentGuests,
+      percentage,
+    });
+  } catch (error: any) {
+    console.error('Checkin stats error:', error);
+    return res.status(500).json({ error: 'حدث خطأ أثناء جلب إحصائيات الحضور' });
+  }
+});
+
 // Fast Gate Search by Last 7 Digits of National ID
 checkinRouter.get('/search', authenticate, async (req: AuthenticatedRequest, res: Response) => {
   try {

@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import confetti from 'canvas-confetti';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Search,
   UserCheck,
@@ -11,7 +10,6 @@ import {
   UserPlus,
   ShieldAlert,
   ArrowRight,
-  Hash,
   Users,
   GraduationCap,
   CheckSquare,
@@ -117,6 +115,18 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
     message: string;
   } | null>(null);
 
+  // --- Live Attendance Stats ---
+  const [stats, setStats] = useState<{ totalGuests: number; attendedGuests: number; absentGuests: number } | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await apiRequest<{ totalGuests: number; attendedGuests: number; absentGuests: number }>('/checkin/stats');
+      setStats(res);
+    } catch {
+      // Silently fail — stats are supplementary
+    }
+  }, []);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const militaryInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,6 +137,13 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
       militaryInputRef.current?.focus();
     }
   }, [searchMode]);
+
+  // Fetch stats on mount and every 15 seconds
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 15000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
 
   // --- Handlers for Mode 1: 7-digit National ID ---
   const handleSuffixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,15 +211,8 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
         body: JSON.stringify({ guestId: guest.id }),
       });
 
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.6 },
-        });
-      } catch (e) {
-        // Confetti is an enhancement
-      }
+      // Refresh stats after successful check-in
+      fetchStats();
 
       setSuccessInfo({
         message: res.message,
@@ -330,15 +340,8 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
         body: JSON.stringify({ guestIds: guestIdsArray }),
       });
 
-      try {
-        confetti({
-          particleCount: 70,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      } catch (e) {
-        // Confetti is an enhancement
-      }
+      // Refresh stats after batch check-in
+      fetchStats();
 
       setBatchSuccessInfo(res);
 
@@ -427,6 +430,39 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
           </div>
         </div>
       </div>
+
+      {/* Live Attendance Counter */}
+      {stats && (
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+              <div className="text-2xl font-black text-slate-900">{stats.totalGuests}</div>
+              <div className="text-[11px] font-bold text-slate-500 mt-0.5">إجمالي المدعوين</div>
+            </div>
+            <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+              <div className="text-2xl font-black text-emerald-700">{stats.attendedGuests}</div>
+              <div className="text-[11px] font-bold text-emerald-600 mt-0.5">حضروا ✓</div>
+            </div>
+            <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+              <div className="text-2xl font-black text-amber-700">{stats.absentGuests}</div>
+              <div className="text-[11px] font-bold text-amber-600 mt-0.5">لم يحضروا بعد</div>
+            </div>
+          </div>
+          {stats.totalGuests > 0 && (
+            <div className="mt-3">
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                  style={{ width: `${Math.round((stats.attendedGuests / stats.totalGuests) * 100)}%` }}
+                />
+              </div>
+              <div className="text-[10px] text-slate-500 font-bold text-center mt-1">
+                نسبة الحضور: {Math.round((stats.attendedGuests / stats.totalGuests) * 100)}%
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Dual Search Mode Switcher Tabs */}
       <div className="bg-slate-200/80 p-1.5 rounded-xl flex items-center gap-2 shadow-inner">
@@ -518,43 +554,18 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
             </form>
           </div>
 
-          {/* Success Notification Banner after Check-in */}
+          {/* Simple Success Toast after Check-in */}
           {successInfo && (
-            <div className="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-6 shadow-md text-emerald-950 animate-fadeIn">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-600 text-white rounded-full flex-shrink-0">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                    تم تسجيل الدخول والتسكين بنجاح
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-black text-emerald-950 mt-1">
-                    {successInfo.guestName}
-                  </h3>
-                  
-                  <div className="mt-3 flex flex-wrap items-center gap-4">
-                    <div className="bg-white border-2 border-emerald-400 px-4 py-2 rounded-lg font-black text-lg text-emerald-900 shadow-sm flex items-center gap-2">
-                      <Bus className="w-5 h-5 text-emerald-600" />
-                      <span>أتوبيس رقم [ {successInfo.busNumber} ]</span>
-                    </div>
-
-                    <div className="bg-white border-2 border-emerald-400 px-4 py-2 rounded-lg font-black text-lg text-emerald-900 shadow-sm flex items-center gap-2">
-                      <Hash className="w-5 h-5 text-emerald-600" />
-                      <span>المقعد رقم [ {successInfo.seatNumber} ]</span>
-                    </div>
-                  </div>
-
-                  {successInfo.isBusNowFull && (
-                    <div className="mt-3 p-3 bg-amber-100 border border-amber-400 rounded-lg text-amber-900 text-xs font-bold flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0" />
-                      <span>
-                        اكتملت سعة الأتوبيس رقم {successInfo.busNumber} بالكامل (36 مقعداً). يرجى توجيه المشرف لتسجيل قائد الأتوبيس.
-                      </span>
-                    </div>
-                  )}
-                </div>
+            <div className="bg-emerald-50 border border-emerald-300 rounded-lg px-4 py-3 flex items-center justify-between gap-3 shadow-sm animate-fadeIn">
+              <div className="flex items-center gap-2 text-emerald-800 text-sm font-bold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>تم التسكين — {successInfo.guestName} → أتوبيس {successInfo.busNumber} مقعد {successInfo.seatNumber}</span>
               </div>
+              {successInfo.isBusNowFull && (
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                  الأتوبيس {successInfo.busNumber} اكتمل
+                </span>
+              )}
             </div>
           )}
 
@@ -880,63 +891,27 @@ export const FastCheckin: React.FC<FastCheckinProps> = ({ onNavigateToAddGuest }
             </div>
           )}
 
-          {/* Batch Success Banner */}
+          {/* Simple Batch Success Toast */}
           {batchSuccessInfo && (
-            <div className="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-6 shadow-md text-emerald-950 animate-fadeIn space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-600 text-white rounded-full flex-shrink-0">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                    اكتمل التسكين الجماعي بنجاح
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-black text-emerald-950 mt-1">
-                    تم تسكين {batchSuccessInfo.successfulCount} مدعو في الأتوبيسات فورياً
-                  </h3>
-                  <p className="text-xs text-emerald-800 mt-0.5">
-                    تم تخصيص المقاعد بالتسلسل التلقائي المعتمد وحفظ السجلات في قاعدة البيانات
-                  </p>
-                </div>
+            <div className="bg-emerald-50 border border-emerald-300 rounded-lg px-4 py-3 shadow-sm animate-fadeIn space-y-2">
+              <div className="flex items-center gap-2 text-emerald-800 text-sm font-bold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>تم التسكين — {batchSuccessInfo.successfulCount} مدعو تم تسكينهم بنجاح</span>
+                {batchSuccessInfo.busFullAlert && (
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 mr-auto">
+                    الأتوبيس {batchSuccessInfo.fullBusNumber} اكتمل
+                  </span>
+                )}
               </div>
-
-              {/* Grid of Newly Allocated Guests */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="flex flex-wrap gap-2">
                 {batchSuccessInfo.results
                   .filter((r) => r.success)
                   .map((r) => (
-                    <div
-                      key={r.guestId}
-                      className="bg-white border border-emerald-300 rounded-lg p-3 shadow-sm flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="text-sm font-black text-slate-900">{r.guestName}</div>
-                        <div className="text-[11px] text-slate-500">
-                          {r.alreadyCheckedIn ? 'مسجل مسبقاً' : 'تم التسكين الآن بنجاح'}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold bg-emerald-100 text-emerald-900 px-2 py-1 rounded border border-emerald-300 flex items-center gap-1">
-                          <Bus className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>أتوبيس {r.busNumber}</span>
-                        </span>
-                        <span className="text-xs font-mono font-bold bg-slate-100 text-slate-900 px-2 py-1 rounded border border-slate-300">
-                          مقعد {r.seatNumber}
-                        </span>
-                      </div>
-                    </div>
+                    <span key={r.guestId} className="text-[11px] font-bold bg-white border border-emerald-200 text-slate-700 px-2 py-1 rounded">
+                      {r.guestName} → أتوبيس {r.busNumber} مقعد {r.seatNumber}
+                    </span>
                   ))}
               </div>
-
-              {batchSuccessInfo.busFullAlert && (
-                <div className="p-3 bg-amber-100 border border-amber-400 rounded-lg text-amber-900 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0" />
-                  <span>
-                    اكتملت سعة الأتوبيس رقم {batchSuccessInfo.fullBusNumber} بالكامل (36 مقعداً). يرجى توجيه المشرف لتسجيل قائد الأتوبيس.
-                  </span>
-                </div>
-              )}
             </div>
           )}
 
