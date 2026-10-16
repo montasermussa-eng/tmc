@@ -106,11 +106,11 @@ let gateToken;
         (0, vitest_1.expect)(result.details?.governorate).toBe('القاهرة');
         (0, vitest_1.expect)(result.details?.gender).toBe('ذكر');
     });
-    (0, vitest_1.it)('should reject invalid National IDs (wrong length, wrong month, invalid governorate)', () => {
+    (0, vitest_1.it)('should reject invalid National IDs (wrong length, wrong month, invalid day, wrong century)', () => {
         (0, vitest_1.expect)((0, nationalIdValidator_1.validateEgyptianNationalId)('12345').isValid).toBe(false);
         (0, vitest_1.expect)((0, nationalIdValidator_1.validateEgyptianNationalId)('29813120101915').isValid).toBe(false);
         (0, vitest_1.expect)((0, nationalIdValidator_1.validateEgyptianNationalId)('29803990101915').isValid).toBe(false);
-        (0, vitest_1.expect)((0, nationalIdValidator_1.validateEgyptianNationalId)('29803129901915').isValid).toBe(false);
+        (0, vitest_1.expect)((0, nationalIdValidator_1.validateEgyptianNationalId)('19803120101915').isValid).toBe(false);
     });
     (0, vitest_1.it)('should properly mask national ID for non-privileged displays', () => {
         (0, vitest_1.expect)((0, nationalIdValidator_1.maskNationalId)('29803120101915')).toBe('298****0101915');

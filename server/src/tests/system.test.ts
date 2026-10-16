@@ -83,11 +83,11 @@ describe('1. National ID Validator & Normalization Tests', () => {
     expect(result.details?.gender).toBe('ذكر');
   });
 
-  it('should reject invalid National IDs (wrong length, wrong month, invalid governorate)', () => {
+  it('should reject invalid National IDs (wrong length, wrong month, invalid day, wrong century)', () => {
     expect(validateEgyptianNationalId('12345').isValid).toBe(false);
     expect(validateEgyptianNationalId('29813120101915').isValid).toBe(false);
     expect(validateEgyptianNationalId('29803990101915').isValid).toBe(false);
-    expect(validateEgyptianNationalId('29803129901915').isValid).toBe(false);
+    expect(validateEgyptianNationalId('19803120101915').isValid).toBe(false);
   });
 
   it('should properly mask national ID for non-privileged displays', () => {

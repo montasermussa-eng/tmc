@@ -99,14 +99,7 @@ function validateEgyptianNationalId(rawId) {
         };
     }
     const govCode = normalized.substring(7, 9);
-    const governorate = exports.GOVERNORATE_CODES[govCode];
-    if (!governorate) {
-        return {
-            isValid: false,
-            normalized,
-            error: `كود المحافظة (${govCode}) في الرقم القومي غير معتمد`,
-        };
-    }
+    const governorate = exports.GOVERNORATE_CODES[govCode] || 'أخرى';
     const sequence = parseInt(normalized.substring(9, 13), 10);
     const gender = sequence % 2 === 1 ? 'ذكر' : 'أنثى';
     const birthDateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

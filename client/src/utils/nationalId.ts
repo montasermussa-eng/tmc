@@ -77,10 +77,7 @@ export function validateEgyptianNationalId(rawId: string | number) {
   }
 
   const govCode = normalized.substring(7, 9);
-  const governorate = GOVERNORATE_CODES[govCode];
-  if (!governorate) {
-    return { isValid: false, normalized, error: 'كود المحافظة غير صحيح' };
-  }
+  const governorate = GOVERNORATE_CODES[govCode] || 'أخرى';
 
   const sequence = parseInt(normalized.substring(9, 13), 10);
   const gender = sequence % 2 === 1 ? 'ذكر' : 'أنثى';
