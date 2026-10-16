@@ -145,3 +145,119 @@ export async function checkinAndAllocateGuest(
     };
   });
 }
+
+export interface RevertCheckinResult {
+  success: boolean;
+  message: string;
+  guestId: string;
+  guestName: string;
+  busNumber: number;
+}
+
+/**
+ * Reverts a guest's check-in status back to "لم يحضر بعد" (Absent/Pending)
+ * - Sets hasAttended: false, busId: null, seatNumber: null
+ * - Re-sequences remaining passengers in the bus so seat numbers remain 1..N
+ * - Updates the bus status accordingly
+ * - Records an audit log
+ */
+export async function revertGuestCheckin(
+  guestId: string,
+  operatorId?: string,
+  operatorName?: string,
+  operatorRole?: string,
+  ipAddress?: string
+): Promise<RevertCheckinResult> {
+  return await prisma.$transaction(async (tx) => {
+    const guest = await tx.guest.findUnique({
+      where: { id: guestId },
+      include: {
+        bus: true,
+      },
+    });
+
+    if (!guest) {
+      throw new Error('لم يتم العثور على سجل المدعو في المنظومة');
+    }
+
+    if (!guest.hasAttended && !guest.busId) {
+      throw new Error('المدعو مسجل بالفعل كمدعو لم يحضر بعد');
+    }
+
+    const previousBus = guest.bus;
+    const previousBusNumber = previousBus?.busNumber || 0;
+    const previousBusId = guest.busId;
+
+    // 1. Reset guest attendance and allocation
+    await tx.guest.update({
+      where: { id: guestId },
+      data: {
+        hasAttended: false,
+        checkedInAt: null,
+        checkedInBy: null,
+        busId: null,
+        seatNumber: null,
+      },
+    });
+
+    // 2. Re-sequence the seats of the remaining guests on that bus
+    if (previousBusId) {
+      const remainingGuests = await tx.guest.findMany({
+        where: { busId: previousBusId },
+        orderBy: { seatNumber: 'asc' },
+      });
+
+      for (let i = 0; i < remainingGuests.length; i++) {
+        const expectedSeat = i + 1;
+        if (remainingGuests[i].seatNumber !== expectedSeat) {
+          await tx.guest.update({
+            where: { id: remainingGuests[i].id },
+            data: { seatNumber: expectedSeat },
+          });
+        }
+      }
+
+      // 3. Update bus status
+      const newCount = remainingGuests.length;
+      let newBusStatus = 'AVAILABLE';
+      if (newCount >= 36) {
+        newBusStatus = 'FULL';
+      } else if (newCount > 0) {
+        newBusStatus = 'IN_PROGRESS';
+      } else {
+        newBusStatus = 'AVAILABLE';
+      }
+
+      const busRecord = await tx.bus.findUnique({ where: { id: previousBusId } });
+      if (busRecord && busRecord.status !== 'CLOSED') {
+        await tx.bus.update({
+          where: { id: previousBusId },
+          data: { status: newBusStatus },
+        });
+      }
+    }
+
+    // 4. Audit Log
+    await tx.auditLog.create({
+      data: {
+        action: 'CHECKIN_REVERTED',
+        entityType: 'GUEST',
+        entityId: guestId,
+        details: `إلغاء حضور وتسكين المدعو (${guest.fullName}) من أتوبيس رقم [${previousBusNumber}] وإعادته لحالة "لم يحضر بعد"`,
+        userId: operatorId,
+        userName: operatorName || 'مسؤول المنظومة',
+        userRole: operatorRole || 'ADMIN',
+        ipAddress: ipAddress || '127.0.0.1',
+      },
+    });
+
+    return {
+      success: true,
+      message: `تم إلغاء حضور وتسكين المدعو (${guest.fullName}) وإرجاعه إلى حالة "لم يحضر بعد" بنجاح`,
+      guestId,
+      guestName: guest.fullName,
+      busNumber: previousBusNumber,
+    };
+  });
+}
+

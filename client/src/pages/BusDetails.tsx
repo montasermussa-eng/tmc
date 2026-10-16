@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Clock,
   UserPlus,
+  Undo2,
+  AlertCircle,
 } from 'lucide-react';
 import { apiRequest } from '../api/client';
 import { BusStatusBadge } from '../components/StatusBadge';
@@ -67,6 +69,9 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [leaderModalOpen, setLeaderModalOpen] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [revertingGuestId, setRevertingGuestId] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     loadBusDetails();
@@ -81,6 +86,39 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
       console.error('Failed to load bus details:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRevertGuest = async (guestId: string, guestName: string) => {
+    const confirmed = window.confirm(
+      `هل تريد بالتأكيد إلغاء حضور وتسكين المدعو:\n\n[ ${guestName} ]\n\nوإعادته إلى قائمة "لم يحضر بعد" وإخلاء مقعده في هذا الأتوبيس؟`
+    );
+    if (!confirmed) return;
+
+    setRevertingGuestId(guestId);
+    setActionError(null);
+    setActionSuccess(null);
+
+    try {
+      const res = await apiRequest<{ success: boolean; message: string }>(
+        '/checkin/revert',
+        {
+          method: 'POST',
+          body: JSON.stringify({ guestId }),
+        }
+      );
+
+      setActionSuccess(res.message || `تم بنجاح إرجاع المدعو (${guestName}) لحالة "لم يحضر بعد" وإخلاء مقعده.`);
+      await loadBusDetails();
+
+      setTimeout(() => {
+        setActionSuccess(null);
+      }, 5000);
+    } catch (err: any) {
+      console.error('Revert guest error:', err);
+      setActionError(err.message || 'فشل إلغاء حضور المدعو');
+    } finally {
+      setRevertingGuestId(null);
     }
   };
 
@@ -293,6 +331,37 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
           </div>
         )}
 
+        {/* Notification Alerts */}
+        {actionSuccess && (
+          <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 text-emerald-900 text-xs sm:text-sm font-bold flex items-center justify-between shadow-sm animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span>{actionSuccess}</span>
+            </div>
+            <button
+              onClick={() => setActionSuccess(null)}
+              className="text-emerald-700 hover:text-emerald-950 font-bold px-2 py-1 rounded"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-800 text-xs sm:text-sm font-bold flex items-center justify-between shadow-sm animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              onClick={() => setActionError(null)}
+              className="text-red-700 hover:text-red-950 font-bold px-2 py-1 rounded"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Passenger Manifest Header & Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
           <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -325,6 +394,7 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                   <th className="py-3 px-4 text-center">الرقم العسكري</th>
                   <th className="py-3 px-4 text-center">درجة القرابة</th>
                   <th className="py-3 px-4 text-center">وقت الحضور</th>
+                  <th className="py-3 px-4 text-center w-36">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -346,7 +416,7 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                     <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-800">
                       المسؤول الأمني والإداري المعتمد عن الأتوبيس
                     </td>
-                    <td colSpan={2} className="py-3 px-4 text-center text-xs text-emerald-900 font-semibold">
+                    <td colSpan={3} className="py-3 px-4 text-center text-xs text-emerald-900 font-semibold">
                       معتمد رسمياً (الفرد الأول)
                     </td>
                   </tr>
@@ -354,7 +424,7 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
 
                 {filteredManifest.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                    <td colSpan={9} className="py-12 text-center text-slate-500">
                       {data.manifest.length === 0
                         ? 'لم يتم تسكين أي مدعوين في هذا الأتوبيس حتى الآن'
                         : 'لا توجد نتائج تطابق البحث'}
@@ -374,7 +444,19 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                       </td>
 
                       <td className="py-3 px-4 font-bold text-slate-900">
-                        {p.fullName}
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{p.fullName}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRevertGuest(p.guestId, p.fullName)}
+                            disabled={revertingGuestId === p.guestId}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold text-red-700 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 rounded transition disabled:opacity-50"
+                            title={`إلغاء حضور (${p.fullName}) وإرجاعه إلى (لم يحضر بعد)`}
+                          >
+                            <Undo2 className={`w-3 h-3 ${revertingGuestId === p.guestId ? 'animate-spin' : ''}`} />
+                            <span>إرجاع لـ "لم يحضر"</span>
+                          </button>
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
@@ -405,6 +487,19 @@ export const BusDetails: React.FC<BusDetailsProps> = ({ busNumber, onBack }) => 
                               minute: '2-digit',
                             })
                           : '—'}
+                      </td>
+
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRevertGuest(p.guestId, p.fullName)}
+                          disabled={revertingGuestId === p.guestId}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-red-700 hover:text-white bg-red-50 hover:bg-red-600 border border-red-300 hover:border-red-600 rounded-lg shadow-sm transition disabled:opacity-50"
+                          title={`إلغاء حضور (${p.fullName}) وإرجاعه إلى (لم يحضر بعد)`}
+                        >
+                          <Undo2 className={`w-3.5 h-3.5 ${revertingGuestId === p.guestId ? 'animate-spin' : ''}`} />
+                          <span>إرجاع لـ "لم يحضر"</span>
+                        </button>
                       </td>
                     </tr>
                   ))

@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { prisma } from '../db';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { normalizeNumerals, maskNationalId } from '../services/nationalIdValidator';
-import { checkinAndAllocateGuest } from '../services/allocationService';
+import { checkinAndAllocateGuest, revertGuestCheckin } from '../services/allocationService';
 
 export const checkinRouter = Router();
 
@@ -127,6 +127,31 @@ checkinRouter.post('/execute', authenticate, async (req: AuthenticatedRequest, r
     console.error('Checkin execute error:', error);
     return res.status(400).json({
       error: error.message || 'فشل تسجيل دخول المدعو',
+    });
+  }
+});
+
+// Revert / Cancel Check-in for a Guest (Set back to "لم يحضر بعد")
+checkinRouter.post('/revert', authenticate, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { guestId } = req.body;
+    if (!guestId) {
+      return res.status(400).json({ error: 'معرف المدعو مطلوب لإلغاء الحضور' });
+    }
+
+    const result = await revertGuestCheckin(
+      guestId,
+      req.user?.id,
+      req.user?.fullName,
+      req.user?.role,
+      req.ip
+    );
+
+    return res.json(result);
+  } catch (error: any) {
+    console.error('Checkin revert error:', error);
+    return res.status(400).json({
+      error: error.message || 'فشل إلغاء حضور المدعو',
     });
   }
 });

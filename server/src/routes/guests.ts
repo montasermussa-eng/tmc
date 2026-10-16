@@ -3,6 +3,7 @@ import { prisma } from '../db';
 import { authenticate, requireRole, AuthenticatedRequest } from '../middleware/auth';
 import { validateEgyptianNationalId, extractLast7Digits, maskNationalId, normalizeNumerals } from '../services/nationalIdValidator';
 import { logAudit } from '../services/auditService';
+import { revertGuestCheckin } from '../services/allocationService';
 
 export const guestsRouter = Router();
 
@@ -267,36 +268,55 @@ guestsRouter.put('/:id', authenticate, requireRole(['ADMIN', 'SUPERVISOR']), asy
   }
 });
 
-// Delete Guest (Admin only)
-guestsRouter.delete('/:id', authenticate, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+// Delete Guest (Admin & Supervisor)
+guestsRouter.delete('/:id', authenticate, requireRole(['ADMIN', 'SUPERVISOR']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const guestId = req.params.id;
-    const guest = await prisma.guest.findUnique({ where: { id: guestId } });
+    const guest = await prisma.guest.findUnique({
+      where: { id: guestId },
+      include: {
+        bus: true,
+        student: true,
+      },
+    });
+
     if (!guest) {
-      return res.status(404).json({ error: 'سجل المدعو غير موجود' });
+      return res.status(404).json({ error: 'سجل المدعو غير موجود في المنظومة' });
     }
 
-    if (guest.hasAttended) {
-      return res.status(400).json({
-        error: 'لا يمكن حذف مدعو تم تسجيل حضوره وتسكينه بالفعل في أتوبيس. يرجى مراجعة إدارة النظم أولاً.',
-      });
+    // If guest was checked in or seated in a bus, revert their check-in first to free the seat and resequence
+    if (guest.hasAttended || guest.busId) {
+      await revertGuestCheckin(
+        guestId,
+        req.user?.id,
+        req.user?.fullName,
+        req.user?.role,
+        req.ip
+      );
     }
 
+    // Delete the guest permanently from the database
     await prisma.guest.delete({ where: { id: guestId } });
 
     await logAudit({
       action: 'GUEST_DELETED',
       entityType: 'GUEST',
       entityId: guestId,
-      details: `حذف سجل المدعو [${guest.fullName}] - الرقم القومي [${maskNationalId(guest.nationalId)}]`,
+      details: `حذف واستبعاد سجل المدعو [${guest.fullName}] - الرقم القومي [${maskNationalId(guest.nationalId)}] ${
+        guest.student ? `(طالب: ${guest.student.fullName})` : '(مستقل)'
+      }`,
       userId: req.user?.id,
       userName: req.user?.fullName,
       userRole: req.user?.role,
       ipAddress: req.ip,
     });
 
-    return res.json({ success: true, message: 'تم حذف سجل المدعو بنجاح' });
+    return res.json({
+      success: true,
+      message: `تم حذف واستبعاد سجل المدعو (${guest.fullName}) نهائياً من المنظومة بنجاح`,
+    });
   } catch (error: any) {
-    return res.status(500).json({ error: 'فشل حذف سجل المدعو' });
+    console.error('Delete guest error:', error);
+    return res.status(500).json({ error: error.message || 'فشل حذف سجل المدعو' });
   }
 });
